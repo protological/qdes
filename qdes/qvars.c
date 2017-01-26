@@ -16,6 +16,16 @@
 #include "qvars.h"
 #include "qdes.h"
 
+#ifndef malloc_t
+#define malloc_t malloc
+#endif
+#ifndef free_t
+#define free_t free
+#endif
+#ifndef realloc_t
+#define realloc_t realloc
+#endif
+
 void _log(char* fmt, ...);
 
 typedef struct{
