@@ -44,12 +44,21 @@
 
 #define DEFAULT_SCRIPT_FILE     "install.dat"
 
-#define SCRIPT_VERSION          "1.0"
+#define SCRIPT_VERSION          "1.1"
 
 typedef enum{
     COMMAND_RUN=0,
     COMMAND_TEST,
 }command_e;
+
+// Return true for pass, false for fail
+typedef bool (*cmd_ptr_t)(char * cmd, char * arg1,char * arg2, command_e command);
+
+//
+// Register a function to be the callback when we have a message
+// that is not included in qdes
+//
+void script_cmdhandler(cmd_ptr_t cb);
 
 //
 // Itterate over the script file and make sure

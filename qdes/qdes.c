@@ -11,6 +11,7 @@
 #include <string.h>
 #include <regex.h>
 #include <stdarg.h>
+#include <syslog.h>
 
 #include "qutil.h"
 #include "qdes.h"
@@ -18,7 +19,7 @@
 
 // Definitions and types
 // ---------------------------------------------
-typedef bool (*cmd_ptr_t)(char * cmd, char * arg1,char * arg2, command_e command);
+
 typedef struct{
     char * command;
     cmd_ptr_t fptr;
@@ -64,8 +65,21 @@ commands_t m_commands[] = {
 char m_path[100];
 FILE * m_log_fp=NULL;
 
+cmd_ptr_t m_cb = NULL;
+
 // Public functions
 // ---------------------------------------------
+
+
+//
+// Register a function to be the callback when we have a message
+// that is not included in qdes
+//
+void script_cmdhandler(cmd_ptr_t cb)
+{
+    m_cb = cb;
+    return;
+}
 
 //
 // Itterate over the script file and make sure
@@ -163,6 +177,7 @@ bool script_run(char * path, char * file, char * section, command_e command)
     char * c;
     bool passed=true;
     bool foundsection=false;
+    bool foundcmd = false;
 
     // The beginning of the init section
     if(cmp(section,"init"))
@@ -265,12 +280,20 @@ bool script_run(char * path, char * file, char * section, command_e command)
             {
                 if(strcmp(m_commands[cmdid].command,cmd)==0)
                 {
+                    foundcmd = true;
                     if(m_commands[cmdid].fptr)
                         passed = (m_commands[cmdid].fptr)(cmd,arg1,arg2,command);
                     break;
                 }
                 cmdid++;
             } // end loop over cmds
+
+            // Handle the cmd with the user defined processor
+            if(!foundcmd)
+            {
+                if(m_cb)
+                    passed = m_cb(cmd,arg1,arg2,command);
+            }
 
             // if we failed something, break out
             if(passed==false) break;
@@ -300,10 +323,13 @@ bool script_run(char * path, char * file, char * section, command_e command)
 //
 void script_clear()
 {
-    if(m_log_fp) fclose(m_log_fp);
+    if(m_log_fp){
+        fclose(m_log_fp);
+        m_log_fp = NULL;
+    }
     memset(m_path,0,sizeof(m_path));
-    var_clearall();
     return;
+    var_clearall();
 }
 
 // Priviate functions
@@ -438,14 +464,14 @@ void _log(char* fmt, ...)
     {
         char logpath[100];
         sprintf(logpath,"%s/%s",m_path,SCRIPT_LOG);
-        //printf("Opening %s\n",logpath);
+        printf("Opening %s\n",logpath);
         m_log_fp = fopen(logpath,"w");
         if(m_log_fp)
             var_add("log",logpath);
     }
 
     va_start(args,fmt);
-    //vsyslog(level, fmt,args);
+    vsyslog(LOG_INFO, fmt,args);
     vsprintf(m_scratch,fmt,args);
     if(m_log_fp){
         fprintf(m_log_fp,"%s",m_scratch);
