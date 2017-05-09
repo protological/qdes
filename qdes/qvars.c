@@ -208,10 +208,10 @@ void var_clearall()
         {
             if(m_vars[x]->name) free_t(m_vars[x]->name);
             if(m_vars[x]->name) free_t(m_vars[x]->value);
-            free_t(m_vars[x]);
+            if(m_vars[x]) free_t(m_vars[x]);
         }
     }
-    free_t(m_vars);
+    if(m_vars) free_t(m_vars);
     m_vars=NULL;
     m_vars_count=0;
 }

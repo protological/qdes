@@ -136,9 +136,11 @@ bool script_checkfile(char * file)
                 cmd++;
             }
 
+            // TODO: check function callback?
+
             // If we failed, break out of reading the file
             if(passed==false){
-                printf("Error processing command '%s'\n",pch);
+                printf("Error processing. Unknown command '%s'\n",pch);
                 break;
             }
 
@@ -202,12 +204,12 @@ bool script_run(char * path, char * file, char * section, command_e command)
     _log("*** Run section %s ***\n",section);
 
     // Make the regex to find entries
-    if(regcomp(&entry, "^[[:blank:]]*{", 0)){
+    if(regcomp(&entry, "^[[:blank:]\r]*{", 0)){
         _log("Fatal error in regcomp\n");
          return false;
     }
     // Make the regex to find section
-    if(regcomp(&sec, ":[[:blank:]]*$", 0)){
+    if(regcomp(&sec, ":[[:blank:]\r]*$", 0)){
         _log("Fatal error in regcomp\n");
          return false;
     }
@@ -232,7 +234,7 @@ bool script_run(char * path, char * file, char * section, command_e command)
         if (!reti) {
             if(strncmp(section,line,strlen(section))==0)
             {
-                //_log("Found section '%s'\n",line);
+                if(g_verbose) _log("Found section '%s'\n",line);
                 foundsection=true;
             }else{
                 foundsection=false;
@@ -254,7 +256,6 @@ bool script_run(char * path, char * file, char * section, command_e command)
             char * pch;
 
             // If we are here, we got an entry for our section, run it!
-
             //_log("Retrieved entry: '%s'\n", line);
 
             // Get the cmd
@@ -276,6 +277,7 @@ bool script_run(char * path, char * file, char * section, command_e command)
             // Loop over the commands and see if we have a match
             cmdid=0;
             passed=false;
+            foundcmd = false;
             while(m_commands[cmdid].command)
             {
                 if(strcmp(m_commands[cmdid].command,cmd)==0)
@@ -291,12 +293,16 @@ bool script_run(char * path, char * file, char * section, command_e command)
             // Handle the cmd with the user defined processor
             if(!foundcmd)
             {
+                //_log("Didn't find match for '%s'\n",cmd);
                 if(m_cb)
                     passed = m_cb(cmd,arg1,arg2,command);
             }
 
             // if we failed something, break out
-            if(passed==false) break;
+            if(passed==false){
+                _log("Error running cmd '%s'\n",cmd);
+                break;
+            }
         }else if (reti == REG_NOMATCH) {
             //_log("Not entry: '%s'\n",line);
         }else if(foundsection==false) {
@@ -328,8 +334,8 @@ void script_clear()
         m_log_fp = NULL;
     }
     memset(m_path,0,sizeof(m_path));
-    return;
     var_clearall();
+    return;
 }
 
 // Priviate functions

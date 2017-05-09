@@ -44,7 +44,7 @@
 
 #define DEFAULT_SCRIPT_FILE     "install.dat"
 
-#define SCRIPT_VERSION          "1.1"
+#define SCRIPT_VERSION          "1.2"
 
 typedef enum{
     COMMAND_RUN=0,
