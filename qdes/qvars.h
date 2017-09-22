@@ -8,8 +8,13 @@
 * January 2017
 *
 ********************************************************************************************/
-#ifndef __SCRIPT_VARS_H__
-#define __SCRIPT_VARS_H__
+#ifndef __QDES_VARS_H__
+#define __QDES_VARS_H__
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //
 // Itterate over the variable list and see if we have an
@@ -43,6 +48,11 @@ void var_printall();
 // Check to see if a variable matches the passed value
 //
 bool var_check(char * name, char * value);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

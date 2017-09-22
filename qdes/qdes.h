@@ -26,9 +26,9 @@
 *      writeable,path     Checks to see if 'path' is writeable
 *
 * Internal variables
-*         $version - The version string for the library
-*         $package_dir - The tmp location of where the pkz was decompressed
-*         $timestamp - The current unix timestamp
+*     $version - The version string for the library
+*     $package_dir - The tmp location of where the pkz was decompressed
+*     $timestamp - The current unix timestamp
 *     $user - The current user running the updater
 *     $log - The full path to the log file
 *     $hostname - The hostname of the system we are running on
@@ -39,10 +39,10 @@
 *         variable values - 50 chars
 *
 ********************************************************************************************/
-#ifndef __SCRIPT_H__
-#define __SCRIPT_H__
+#ifndef __QDES_H__
+#define __QDES_H__
 
-#define DEFAULT_SCRIPT_FILE     "install.dat"
+//#define DEFAULT_SCRIPT_FILE     "install.dat"
 
 #define SCRIPT_VERSION          "1.2"
 
@@ -54,6 +54,9 @@ typedef enum{
 // Return true for pass, false for fail
 typedef bool (*cmd_ptr_t)(char * cmd, char * arg1,char * arg2, command_e command);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 //
 // Register a function to be the callback when we have a message
 // that is not included in qdes
@@ -75,6 +78,12 @@ bool script_run(char * path, char * file, char * section, command_e command);
 // Reset the script processor, free all vars, close log, etc
 //
 void script_clear();
+
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

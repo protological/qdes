@@ -67,6 +67,8 @@ FILE * m_log_fp=NULL;
 
 cmd_ptr_t m_cb = NULL;
 
+bool m_verbose = false;
+
 // Public functions
 // ---------------------------------------------
 
@@ -148,7 +150,7 @@ bool script_checkfile(char * file)
             //_log("Not entry: '%s'\n",line);
         }else{
             //regerror(reti, &entry, msgbuf, sizeof(msgbuf));
-            if(g_verbose) _log("Regex match failed:\n");
+            if(m_verbose) _log("Regex match failed:\n");
             passed=false;
             break;
         }
@@ -234,7 +236,7 @@ bool script_run(char * path, char * file, char * section, command_e command)
         if (!reti) {
             if(strncmp(section,line,strlen(section))==0)
             {
-                if(g_verbose) _log("Found section '%s'\n",line);
+                if(m_verbose) _log("Found section '%s'\n",line);
                 foundsection=true;
             }else{
                 foundsection=false;
@@ -244,7 +246,7 @@ bool script_run(char * path, char * file, char * section, command_e command)
             //_log("Not entry: '%s'\n",line);
         }else {
             //regerror(reti, &entry, msgbuf, sizeof(msgbuf));
-            if(g_verbose) _log("Regex match failed:\n");
+            if(m_verbose) _log("Regex match failed:\n");
             passed=false;
             break;
         }
@@ -309,7 +311,7 @@ bool script_run(char * path, char * file, char * section, command_e command)
             // keep going
         }else {
             //regerror(reti, &entry, msgbuf, sizeof(msgbuf));
-            if(g_verbose) _log("Regex match failed:\n");
+            if(m_verbose) _log("Regex match failed:\n");
             passed=false;
             break;
         }
