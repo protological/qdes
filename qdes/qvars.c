@@ -8,8 +8,10 @@
 * January 2017
 *
 ********************************************************************************************/
-#include "defs.h"
-
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "qutil.h"
@@ -26,7 +28,13 @@
 #define realloc_t realloc
 #endif
 
+#if QDES_ENABLE_LOGFILE
 void _log(char* fmt, ...);
+#elif !defined(QDES_QUIET)
+#define _log	printf
+#else
+#define  _log(...)
+#endif
 
 typedef struct{
     char * name;
@@ -64,7 +72,7 @@ bool var_find(char * var,char * outvar)
     
     // Check constants
     if(cmp(var,"version")){
-        sprintf(outvar,"%s",SCRIPT_VERSION);
+        sprintf(outvar,"%s",QDES_VERSION);
         ret = true;
     }else if(cmp(var,"hostname")){
         u_net_get_hostname(outvar,50);

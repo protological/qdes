@@ -6,8 +6,10 @@
 * January 2017
 *
 ********************************************************************************************/
-#include "defs.h"
-
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 #include <regex.h>
 #include <stdarg.h>
@@ -22,22 +24,28 @@
 
 typedef struct{
     char * command;
-    cmd_ptr_t fptr;
+    qdes_cmd_ptr_t fptr;
 }commands_t;
 
 #define SCRIPT_LOG              "script.log"
 
 // Local prototypes
 // ---------------------------------------------
-char * _command_str(command_e command);
-int _cmd_run(char * cmd, command_e command);
-bool _file_copy(char * archdir, char *arg1,char * arg2, command_e command);
-bool _file_touch(char * file, command_e command);
+char * _command_str(qdes_cmd_e command);
+int _cmd_run(char * cmd, qdes_cmd_e command);
+bool _file_copy(char * archdir, char *arg1,char * arg2, qdes_cmd_e command);
+bool _file_touch(char * file, qdes_cmd_e command);
 
-bool _command_general(char * cmd, char * arg1, char * arg2, command_e command);
-bool _command_check(char * cmd, char * arg1, char * arg2, command_e command);
+bool _command_general(char * cmd, char * arg1, char * arg2, qdes_cmd_e command);
+bool _command_check(char * cmd, char * arg1, char * arg2, qdes_cmd_e command);
 
+#if QDES_ENABLE_LOGFILE
 void _log(char* fmt, ...);
+#elif !defined(QDES_QUIET)
+#define _log	printf
+#else
+#define  _log(...)
+#endif
 
 // Variables
 // ---------------------------------------------
@@ -65,7 +73,7 @@ commands_t m_commands[] = {
 char m_path[100];
 FILE * m_log_fp=NULL;
 
-cmd_ptr_t m_cb = NULL;
+qdes_cmd_ptr_t m_cb = NULL;
 
 bool m_verbose = false;
 
@@ -77,7 +85,7 @@ bool m_verbose = false;
 // Register a function to be the callback when we have a message
 // that is not included in qdes
 //
-void script_cmdhandler(cmd_ptr_t cb)
+void qdes_cmdhandler(qdes_cmd_ptr_t cb)
 {
     m_cb = cb;
     return;
@@ -87,7 +95,7 @@ void script_cmdhandler(cmd_ptr_t cb)
 // Itterate over the script file and make sure
 // we understand all of the commands
 //
-bool script_checkfile(char * file)
+bool qdes_checkfile(char * file)
 {
     FILE * fp;
     char line[100];
@@ -168,7 +176,7 @@ bool script_checkfile(char * file)
 //
 // Process a section of the script
 //
-bool script_run(char * path, char * file, char * section, command_e command)
+bool qdes_run(char * path, char * file, char * section, qdes_cmd_e command)
 {
     FILE * fp;
     char line[100];
@@ -188,6 +196,9 @@ bool script_run(char * path, char * file, char * section, command_e command)
     {
         // Save this path (Do first because of log)
         strncpy(m_path,path,sizeof(m_path));
+        len = strlen(m_path);
+        if(m_path[len-1]!='/'){ m_path[len]='/'; m_path[len+1]=0; }
+
 
         // Set internal variables
         _log("Setting internal variables\n");
@@ -329,7 +340,7 @@ bool script_run(char * path, char * file, char * section, command_e command)
 //
 // Reset the script processor, dump all vars
 //
-void script_clear()
+void qdes_clear()
 {
     if(m_log_fp){
         fclose(m_log_fp);
@@ -343,16 +354,16 @@ void script_clear()
 // Priviate functions
 // ---------------------------------------------
 
-char * _command_str(command_e command)
+char * _command_str(qdes_cmd_e command)
 {
     switch(command){
-    case COMMAND_RUN: return "COMMAND_RUN";
-    case COMMAND_TEST: return "COMMAND_TEST";
+    case QDES_CMD_RUN: return "QDES_CMD_RUN";
+    case QDES_CMD_TEST: return "QDES_CMD_TEST";
     default: break;
     }
     return "COMMAND_UNKNOWN";
 }
-int _cmd_run(char * cmd, command_e command)
+int _cmd_run(char * cmd, qdes_cmd_e command)
 {
     char cmdout[100]= {0};
     int replaced;
@@ -360,10 +371,10 @@ int _cmd_run(char * cmd, command_e command)
     replaced = var_replace(cmd,cmdout,sizeof(cmdout));
     _log("CMDRUN: '%s'\n",cmdout);
 
-    if(command != COMMAND_TEST) ret = u_run_cmd_retcode(cmdout);
+    if(command != QDES_CMD_TEST) ret = u_run_cmd_retcode(cmdout);
     return ret;
 }
-bool _file_copy(char * archdir, char *arg1,char * arg2, command_e command)
+bool _file_copy(char * archdir, char *arg1,char * arg2, qdes_cmd_e command)
 {
     char src[100] = {0};
     char file[100] = {0};
@@ -378,21 +389,21 @@ bool _file_copy(char * archdir, char *arg1,char * arg2, command_e command)
     else
         sprintf(src,"%s",file);
     _log("FILECPY: %s' -> '%s'\n",src,dest);
-    if(command != COMMAND_TEST) ret = u_file_copy(src,dest);
+    if(command != QDES_CMD_TEST) ret = u_file_copy(src,dest);
     return ret;
 }
-bool _file_touch(char * file, command_e command)
+bool _file_touch(char * file, qdes_cmd_e command)
 {
     char path[100];
     int replaced;
     bool passed=true;
     replaced = var_replace(file,path,sizeof(path));
     _log("TOUCH: '%s'\n",path);
-    if(command != COMMAND_TEST) passed=u_touch(path);
+    if(command != QDES_CMD_TEST) passed=u_touch(path);
     return passed;
 }
 
-bool _command_general(char * cmd, char * arg1, char * arg2, command_e command)
+bool _command_general(char * cmd, char * arg1, char * arg2, qdes_cmd_e command)
 {
     char arg1_replaced[100]= {0};
     bool passed = true;
@@ -451,7 +462,7 @@ bool _command_general(char * cmd, char * arg1, char * arg2, command_e command)
 
     return passed;
 }
-bool _command_check(char * cmd, char * arg1, char * arg2, command_e command)
+bool _command_check(char * cmd, char * arg1, char * arg2, qdes_cmd_e command)
 {
     // Check a variable against this value
     bool ret;
@@ -463,6 +474,7 @@ bool _command_check(char * cmd, char * arg1, char * arg2, command_e command)
     return true;
 }
 
+#if QDES_ENABLE_LOGFILE
 char m_scratch[200];
 void _log(char* fmt, ...)
 {
@@ -471,7 +483,7 @@ void _log(char* fmt, ...)
     if(m_log_fp==NULL)
     {
         char logpath[100];
-        sprintf(logpath,"%s/%s",m_path,SCRIPT_LOG);
+        sprintf(logpath,"%s%s",m_path,SCRIPT_LOG);
         printf("Opening %s\n",logpath);
         m_log_fp = fopen(logpath,"w");
         if(m_log_fp)
@@ -488,6 +500,8 @@ void _log(char* fmt, ...)
     va_end(args);
     return;
 }
+#endif
+
 
 
 // eof

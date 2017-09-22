@@ -42,17 +42,15 @@
 #ifndef __QDES_H__
 #define __QDES_H__
 
-//#define DEFAULT_SCRIPT_FILE     "install.dat"
-
-#define SCRIPT_VERSION          "1.2"
+#define QDES_VERSION          "1.2"
 
 typedef enum{
-    COMMAND_RUN=0,
-    COMMAND_TEST,
-}command_e;
+    QDES_CMD_RUN=0,
+	QDES_CMD_TEST,
+}qdes_cmd_e;
 
 // Return true for pass, false for fail
-typedef bool (*cmd_ptr_t)(char * cmd, char * arg1,char * arg2, command_e command);
+typedef bool (*qdes_cmd_ptr_t)(char * cmd, char * arg1,char * arg2, qdes_cmd_e command);
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,23 +59,23 @@ extern "C" {
 // Register a function to be the callback when we have a message
 // that is not included in qdes
 //
-void script_cmdhandler(cmd_ptr_t cb);
+void qdes_cmdhandler(qdes_cmd_ptr_t cb);
 
 //
 // Itterate over the script file and make sure
 // we understand all of the commands
 //
-bool script_checkfile(char * file);
+bool qdes_checkfile(char * file);
 
 //
 // Process a section of the script
 //
-bool script_run(char * path, char * file, char * section, command_e command);
+bool qdes_run(char * path, char * file, char * section, qdes_cmd_e command);
 
 //
 // Reset the script processor, free all vars, close log, etc
 //
-void script_clear();
+void qdes_clear();
 
 
 
